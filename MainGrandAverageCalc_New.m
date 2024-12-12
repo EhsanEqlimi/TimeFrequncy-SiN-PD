@@ -40,13 +40,14 @@ TimeRange=[0 6]; %Second or [0 4.5]
 %% Time frequency parameters
 TFParam.pad =[];
 TFParam.keeptrials= 'yes';
+TFParam.keeptapers='yes';
 TFParam.output= 'fourier';%'fourier';
 TFParam.channel= 'EEG';
 TFParam.method='mtmconvol';%'mtmfft';%'mtmconvol';
 TFParam.taper='dpss';%'dpss';%'hanning';
-TFParam.foi= 1:2:30;% analysis 1 to 13 Hz in steps of 2 Hz
-TFParam.tapsmofrq=0.4 *TFParam.foi;
-TFParam.t_ftimwin=ones(length(TFParam.foi),1).*0.5; %length of time window = 0.5 sec
+TFParam.foi= 1:1:30;% analysis 1 to 13 Hz in steps of 2 Hz
+TFParam.tapsmofrq=1;
+TFParam.t_ftimwin=ones(length(TFParam.foi),1).*1; %length of time window = 0.5 sec
 TFParam.toi= 0:0.05:TimeRange(2)-TimeRange(1);
 Method='itpc';
 %% Main loop for subjects
