@@ -89,35 +89,46 @@ for i=1:length(EDFDir)% Loop through all subjects
     cfg.parameter={'powspctrm'};% Specify the parameter to normalize
     cfg.baselinetype=BaseLineNormtype;% Baseline type ('db', 'relchange', etc.)
     [TFCat_BaseNormed,meanVals]=ft_freqbaseline_EE(cfg,TFCat);
-%% Time-Frequency Analysis on S14 and S16 EEG Data (Condition -5dB and 5dB, rexcpectlvlwy)
-% Perform time-frequency analysis on the EEG data for condition S14
-for CondNum=1:2
-TFS14=FnTimeFreqAnalysis(DataS14,TFParam); % Apply the time-frequency analysis function
-TFS14.dimord='chan_freq_time'; % Specify the dimensional order (channels, frequencies, time)
+%% Time-Frequency Analysis on S14 and S16 EEG Data (Conditions: -5dB and 5dB)
+% This loop performs time-frequency analysis for two EEG conditions: S14 (-5dB) and S16 (5dB). 
+% For each condition, we compute induced power, apply baseline normalization, 
+% and store both condition-specific and average-normalized power spectra.
 
-% Calculate induced power from the Fourier spectrum of S14
-PowerTemp=FnInducedPower(TFS14.fourierspctrm); % Extract induced power from Fourier coefficients
-Powspctrm_NoNorm=squeeze(nanmean(PowerTemp,1)); % Compute mean power across trials without normalization
-TFS14.powspctrm=Powspctrm_NoNorm; % Assign unnormalized power spectrum to TFS14
-
-% Set up configuration for baseline normalization
-cfg=[]; 
-cfg.baseline=BaselineWin; % Define the baseline time window (e.g., [0.5 0.8] seconds)
-cfg.parameter={'powspctrm'}; % Specify the parameter to normalize (power spectrum)
-cfg.baselinetype=BaseLineNormtype; % Define the type of baseline normalization (e.g., 'db', 'relchange')
-
-% Perform condition-specific baseline normalization
-TFS14=ft_freqbaseline(cfg,TFS14); % Apply baseline normalization directly to TFS14
-Powspctrm_CondNorm=TFS14.powspctrm; % Extract condition-specific baseline-normalized power spectrum
-
-% Calculate averaged baseline normalization (across the entire baseline)
-Powspctrm_AvgNorm=10*log10(Powspctrm_NoNorm./meanVals); % Compute power spectrum normalized to the average baseline
-
-% Store all power results in TFS14 for comparison
-TFS14.powspctrm_CondNorm=Powspctrm_CondNorm; % Store condition-specific normalized power
-TFS14.powspctrm_AvgNorm=Powspctrm_AvgNorm; % Store average baseline-normalized power
-TFS14.powspctrm=Powspctrm_NoNorm; % Retain unnormalized power spectrum as default
-
+Data_Cond={DataS14, DataS16}; % Cell array holding EEG data for conditions S14 and S16
+for CondNum=1:2 % Loop through the two conditions (S14 and S16)
+    
+    % Select EEG data for the current condition
+    Data2TF=Data_Cond{CondNum};
+    
+    % Apply time-frequency analysis
+    TF_Cond=FnTimeFreqAnalysis(Data2TF, TFParam); % Perform time-frequency decomposition
+    TF_Cond.dimord='chan_freq_time'; % Specify dimensional order: channels, frequencies, time
+    
+    % Compute induced power (unnormalized)
+    PowerTemp=FnInducedPower(TF_Cond.fourierspctrm); % Extract induced power from Fourier coefficients
+    Powspctrm_NoNorm=squeeze(nanmean(PowerTemp, 1)); % Compute mean power across trials without normalization
+    TF_Cond.powspctrm=Powspctrm_NoNorm; % Assign unnormalized power spectrum to the TF_Cond structure
+    
+    % Configure baseline normalization
+    cfg=[];
+    cfg.baseline=BaselineWin; % Define the baseline time window (e.g., [0.5 0.8] seconds)
+    cfg.parameter={'powspctrm'}; % Specify the parameter for normalization (e.g., power spectrum)
+    cfg.baselinetype=BaseLineNormtype; % Define normalization type: 'db', 'relchange', etc.
+    
+    % Apply baseline normalization (condition-specific)
+    TF_Cond=ft_freqbaseline(cfg, TF_Cond); % Normalize power spectrum using the baseline window
+    Powspctrm_CondNorm=TF_Cond.powspctrm; % Extract the condition-specific baseline-normalized power spectrum
+    
+    % Compute average baseline normalization
+    Powspctrm_AvgNorm=10 * log10(Powspctrm_NoNorm ./ meanVals); % Normalize power spectrum to average baseline values
+    
+    % Store results for comparison
+    TF_Cond.powspctrm_CondNorm=Powspctrm_CondNorm; % Store condition-specific normalized power
+    TF_Cond.powspctrm_AvgNorm=Powspctrm_AvgNorm; % Store average baseline-normalized power
+    TF_Cond.powspctrm=Powspctrm_NoNorm; % Retain the unnormalized power spectrum as default
+    % Calulate coherent power using eigen decomposiotion on coherence power (only for alpha in this 
+    
+end
 
 
 
