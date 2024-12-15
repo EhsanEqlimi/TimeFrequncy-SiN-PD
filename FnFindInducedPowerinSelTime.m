@@ -4,5 +4,11 @@ function MeanInducedPower=FnFindInducedPowerinSelTime(FreqRange,TimeRange,TFData
 [~, Index2]=min(abs(repmat(TFData.freq,size(FreqRange,1))-FreqRange(:,2)),[],2);
 [~, Index3]=min(abs(repmat(TFData.time,size(TimeRange,1))-TimeRange(:,1)),[],2);
 [~, Index4]=min(abs(repmat(TFData.time,size(TimeRange,1))-TimeRange(:,2)),[],2);
-PowerPreSent=MeanPowerTrials(:,Index1:Index2,Index3:Index4 );
-MeanInducedPower=squeeze(nanmean(nanmean(PowerPreSent,3),2));
+if ndims(MeanPowerTrials)==3
+    PowerPreSent=MeanPowerTrials(:,Index1:Index2,Index3:Index4 );
+    MeanInducedPower=squeeze(nanmean(nanmean(PowerPreSent,3),2));
+else
+    PowerPreSent=MeanPowerTrials(:,:,Index1:Index2,Index3:Index4 );
+    MeanInducedPower=squeeze(nanmean(PowerPreSent,4));
+
+end

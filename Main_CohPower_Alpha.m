@@ -24,7 +24,7 @@ EEGDataPath='E:\Ehsan\Data_PP_Corrected\';
 addpath('E:\Ehsan\RippleServerFiles\Toolbox\fieldtrip-20220729'); % Add FieldTrip to path
 ft_defaults; % Initialize FieldTrip
 
-
+%addpath(genpath('E:\Ehsan\GitHub\Toolbox\eeglab2019_1'));
 
 Domain='PD*avgall';%'avgmast'; %'avgall';
 EDFDir=dir(fullfile(EEGDataPath,[ '*' Domain '.edf']));%'*corrected.edf'
