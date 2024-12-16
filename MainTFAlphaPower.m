@@ -18,7 +18,7 @@ addpath('E:\Ehsan\RippleServerFiles\Toolbox\fieldtrip-20220729');
 ft_defaults;
 
 % Specify the domain for data selection
-Domain='HC*avgall';% Options: 'HC*avgall' or 'HC*avgmast'
+Domain='HC*avgmast';% Options: 'HC*avgall' or 'HC*avgmast'
 EDFDir=dir(fullfile(EEGDataPath,['*' Domain '.edf']));% List of EDF files in the specified domain
 % Initialize an empty table for categorical data (if needed)
 CatTable=[];
@@ -138,49 +138,80 @@ for i=1:length(EDFDir)% Loop through all subjects
         TF_Cond.powspctrm = Powspctrm_NoNorm; % Retain the unnormalized power spectrum as the default representation
 
         % Calculate coherent power using eigen decomposition of coherence power
-        % At this stage, I apply the cross-spectrum averaged over time within a specific time window.
-        % The analysis uses a 0.5-second step size for the time resolution, resulting in a frequency resolution of 2 Hz.
+        % At this stage, I apply the cross-spectrum, averaged over time within a specific time window.
+        % - Time resolution: 0.5-second steps
+        % - Frequency resolution: 2 Hz
         % This step focuses on extracting coherence information for specific frequency bands.
-        % The analysis here is demonstrated only for the alpha band (e.g., 8-13 Hz).
-        Xw=permute(TF_Cond_Fourier.fourierspctrm,[2 1 3 4]);%chanxtrialxfreqxtime
+        % The analysis is demonstrated specifically for the alpha band (e.g., 8-13 Hz).
+
+        % Reshape Fourier spectrum to dimensions: channels x trials x frequencies x time
+        Xw=permute(TF_Cond_Fourier.fourierspctrm,[2,1,3,4]); % Reordering dimensions for further analysis
+
+        % Perform eigen decomposition of the cross-spectra to compute coherence power
         [XYw,Cmat,Ctot,Cvec,Cent,SDiag,SDiagAvg]=FnEigCrossSpectrum(Xw); % Calculate cross-spectra
-        SDiagAvg_perm=permute(SDiagAvg,[3 1 2]);
+        SDiagAvg_perm=permute(SDiagAvg,[3,1,2]); % Permute dimensions for further analysis
+        CohPow=permute(abs(Cvec),[3,1,2]); % Compute coherence power
 
+        % Loop through each time range and calculate mean power for various normalization types
+        %figure,
+        for TimeRangeInd=2:size(TimeWindowMatrix,1)
+            MeanPower_CondNorm(:,TimeRangeInd,CondNum,i)=FnFindInducedPowerinSelTime(FreqRange,TimeWindowMatrix(TimeRangeInd,:),TF_Cond,TF_Cond.powspctrm_CondNorm);
+            MeanPower_AvgNorm(:,TimeRangeInd,CondNum,i)=FnFindInducedPowerinSelTime(FreqRange,TimeWindowMatrix(TimeRangeInd,:),TF_Cond,TF_Cond.powspctrm_AvgNorm);
+            MeanPower_NoNorm(:,TimeRangeInd,CondNum,i)=FnFindInducedPowerinSelTime(FreqRange,TimeWindowMatrix(TimeRangeInd,:),TF_Cond,TF_Cond.powspctrm);
+            MeanPower_SDiag(:,TimeRangeInd,CondNum,i)=FnFindInducedPowerinSelTime(FreqRange,TimeWindowMatrix(TimeRangeInd,:),TF_Cond,SDiagAvg_perm);
+            MeanPower_ChoPow(:,TimeRangeInd,CondNum,i)=FnFindInducedPowerinSelTime(FreqRange,TimeWindowMatrix(TimeRangeInd,:),TF_Cond,CohPow);
 
-
-        for TimeRangeInd=1:size(TimeWindowMatrix,1)
-            MeanPower_CondNorm(:,TimeRangeInd)=FnFindInducedPowerinSelTime(FreqRange,TimeWindowMatrix(TimeRangeInd,:),TF_Cond,TF_Cond.powspctrm_CondNorm);
-            MeanPower_AvgNorm(:,TimeRangeInd)=FnFindInducedPowerinSelTime(FreqRange,TimeWindowMatrix(TimeRangeInd,:),TF_Cond,TF_Cond.powspctrm_AvgNorm);
-            MeanPower_NoNorm(:,TimeRangeInd)=FnFindInducedPowerinSelTime(FreqRange,TimeWindowMatrix(TimeRangeInd,:),TF_Cond,TF_Cond.powspctrm);
-            MeanPower_SDiag(:,TimeRangeInd)=FnFindInducedPowerinSelTime(FreqRange,TimeWindowMatrix(TimeRangeInd,:),TF_Cond,SDiagAvg_perm);
+            % subplot(4,3,TimeRangeInd)
+            % topoplot(MeanPower_CondNorm(:,TimeRangeInd),EEGChanLoc,'electrodes','off','style','both','plotrad',.7,'headrad',.66); % Topographic plot for -5 dB condition
+            % colorbar;
         end
 
 
-
-
-
-
-
-            % Method 1: Using FieldTrip's time-frequency representation (mtmconvol)
-            Xw=FnFindInducedPowerinSelTime(FreqRange,TimeRange_PreSent_Ind,TFS14_BaseNormed,TF142Cut);
-            XwS14=permute(XwS14,[2 1 3]);
-            [XYw_S14,Cmat_S14,Ctot_S14,Cvec_S14,Cent_S14,Sdiag_S14]=FnEigCrossSpectrum(XwS14); % Calculate cross-spectra
-            PreSentCoherentAlphaPower_S14(:,i)=nanmean(abs(Cvec_S14),1);
-            PreSentSpectralAlphaPower_S14(:,i)=nanmean(Sdiag_S14,1);
-
-
-
-            % Method 2: My Ccustom implementation
-            % Use a multi-taper FFT approach and segment the data manually for coherence analysis.
-
-
-        end
-
-
-
-
-
-
-
+        % Method 2: My Ccustom implementation
+        % Use a multi-taper FFT approach and segment the data manually for coherence analysis.
 
     end
+
+end
+
+%% Grand average calculation
+AllPower(:,:,:,1)=nanmean(MeanPower_CondNorm,4);
+AllPower(:,:,:,2)=nanmean(MeanPower_AvgNorm,4);
+AllPower(:,:,:,3)=nanmean(MeanPower_NoNorm,4);
+AllPower(:,:,:,4)=nanmean(MeanPower_SDiag,4);
+AllPower(:,:,:,5)=nanmean(MeanPower_ChoPow,4);
+
+% Number of conditions, methods, and time windows
+NumConditions=2;  % Two conditions (e.g., -5 dB and 5 dB)
+NumMethod=5;  % Five different normalization methods
+NumWindow=size(TimeWindowMatrix,1);  % Number of time windows (e.g., 12 windows)
+
+% Loop through each condition
+for Cond=1:NumConditions
+    % Extract power for the current condition
+    CurrentPow=squeeze(AllPower(:,:,Cond,:));
+
+    % Create a new figure for each condition
+    figure;
+    for MethodIdx=1:NumMethod  % Loop through each normalization method
+        for WindowIdx=2:NumWindow  % Loop through each time window
+            % Determine subplot position for the current method and window
+            subplot(NumMethod,NumWindow,(MethodIdx-1)*NumWindow+WindowIdx);
+
+            % Extract the power data for the current method and window
+            CurrentPowTemp=CurrentPow(:,WindowIdx,MethodIdx);
+
+            % Create topographic plot for the current window and method
+            topoplot(CurrentPowTemp,EEGChanLoc,'electrodes','off','style','both','plotrad',.7,'headrad',.66); % Topographic plot for condition
+            % Check if the brewermap toolbox is available; if not, it will load it
+            ft_hastoolbox('brewermap', 1);  % Ensure that the brewermap toolbox is on the path
+            % Change the colormap for the topographic plots to 'RdBu' and reverse the color order
+            % This colormap is suitable for visualizing EEG microstates with distinct colors.
+            colormap(flipud(brewermap(64, 'RdBu')));  % Set the colormap to RdBu and flip it for better visual contrast
+        end
+    end
+end
+
+
+
+
