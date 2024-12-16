@@ -18,7 +18,7 @@ addpath('E:\Ehsan\RippleServerFiles\Toolbox\fieldtrip-20220729');
 ft_defaults;
 
 % Specify the domain for data selection
-Domain='HC*avgmast';% Options: 'HC*avgall' or 'HC*avgmast'
+Domain='HC*avgall';% Options: 'HC*avgall' or 'HC*avgmast'
 EDFDir=dir(fullfile(EEGDataPath,['*' Domain '.edf']));% List of EDF files in the specified domain
 % Initialize an empty table for categorical data (if needed)
 CatTable=[];
