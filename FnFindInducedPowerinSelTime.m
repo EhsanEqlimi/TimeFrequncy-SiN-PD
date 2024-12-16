@@ -9,6 +9,5 @@ if ndims(MeanPowerTrials)==3
     MeanInducedPower=squeeze(nanmean(nanmean(PowerPreSent,3),2));
 else
     PowerPreSent=MeanPowerTrials(:,:,Index1:Index2,Index3:Index4 );
-    MeanInducedPower=squeeze(nanmean(PowerPreSent,4));
-
+    MeanInducedPower=squeeze(nanmean(PowerPreSent,[3,4]));
 end
