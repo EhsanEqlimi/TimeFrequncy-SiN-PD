@@ -126,7 +126,7 @@ for CondNum=1:2 % Loop through the two conditions (S14 and S16)
     TF_Cond.powspctrm_CondNorm=Powspctrm_CondNorm; % Store condition-specific normalized power
     TF_Cond.powspctrm_AvgNorm=Powspctrm_AvgNorm; % Store average baseline-normalized power
     TF_Cond.powspctrm=Powspctrm_NoNorm; % Retain the unnormalized power spectrum as default
-    % Calulate coherent power using eigen decomposiotion on coherence power (only for alpha in this 
+    % Calulate coherent power using eigen decomposiotion on coherence power (only for alpha in this case) 
     
 end
 
