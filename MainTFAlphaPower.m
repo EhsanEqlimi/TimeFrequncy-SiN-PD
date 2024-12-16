@@ -188,26 +188,32 @@ NumWindow=size(TimeWindowMatrix,1);  % Number of time windows (e.g., 12 windows)
 
 % Loop through each condition
 for Cond=1:NumConditions
+    
     % Extract power for the current condition
+    CurrentPow=[];
     CurrentPow=squeeze(AllPower(:,:,Cond,:));
 
     % Create a new figure for each condition
     figure;
+    title(['HC-AvgMast-Cond ' num2str(Cond)]);
     for MethodIdx=1:NumMethod  % Loop through each normalization method
         for WindowIdx=2:NumWindow  % Loop through each time window
             % Determine subplot position for the current method and window
             subplot(NumMethod,NumWindow,(MethodIdx-1)*NumWindow+WindowIdx);
 
             % Extract the power data for the current method and window
+            CurrentPowTemp=[];
             CurrentPowTemp=CurrentPow(:,WindowIdx,MethodIdx);
 
             % Create topographic plot for the current window and method
             topoplot(CurrentPowTemp,EEGChanLoc,'electrodes','off','style','both','plotrad',.7,'headrad',.66); % Topographic plot for condition
-            % Check if the brewermap toolbox is available; if not, it will load it
-            ft_hastoolbox('brewermap', 1);  % Ensure that the brewermap toolbox is on the path
-            % Change the colormap for the topographic plots to 'RdBu' and reverse the color order
-            % This colormap is suitable for visualizing EEG microstates with distinct colors.
-            colormap(flipud(brewermap(64, 'RdBu')));  % Set the colormap to RdBu and flip it for better visual contrast
+            clim([min(CurrentPowTemp),max(CurrentPowTemp)]);
+
+            % % Check if the brewermap toolbox is available; if not, it will load it
+            % ft_hastoolbox('brewermap', 1);  % Ensure that the brewermap toolbox is on the path
+            % % Change the colormap for the topographic plots to 'RdBu' and reverse the color order
+            % % This colormap is suitable for visualizing EEG microstates with distinct colors.
+            % colormap(flipud(brewermap(64, 'RdBu')));  % Set the colormap to RdBu and flip it for better visual contrast
         end
     end
 end
